@@ -63,7 +63,7 @@ val ~> val * val
 |> Map.put(%{}, :goodbye, &1) # {:ok, %{goodbye: "world"}}
 ```
 
-### Pipe into function definition
+### Pipe into lambda
 
 ```elixir
 %{hello: "world"}
