@@ -1,6 +1,8 @@
-defmodule Pipette.Macros do
+defmodule Pex.Macros do
 
-  alias Pipette.Either
+  @moduledoc false
+
+  alias Pex.Result
 
   @value {:__VALUE__, [], __MODULE__}
 
@@ -19,26 +21,16 @@ defmodule Pipette.Macros do
     end
   end
 
-  # Pipe into list head or tail
+  # Pipe into list
   defmacro left |> [{:|, _, [_(), tail]}], do: {:ok, [left | tail]}
-  defmacro left |> [{:|, _, [head, _()]}] do
-    quote do
-      {:ok, [unquote(head) | unquote(left)]}
-    end
-  end
-
-  # Pipe into list position
-  defmacro left |> right when is_list(right) do
-    IO.inspect(right)
-    {:ok, Enum.map(right, fn
-      _() -> left;
-      x -> x
-    end)}
-  end
+  defmacro left |> [{:|, _, [head, _()]}], do:
+    quote([do: {:ok, [unquote(head) | unquote(left)]}])
+  defmacro left |> right when is_list(right), do:
+    {:ok, Enum.map(right, fn _() -> left; x -> x end)}
 
   # Pipe into function defintion
   defmacro left |> ({:fn, meta, _} = fun), do:
-    either(:right, left, {{:., meta, [fun]}, meta, []})
+    result(:ok, left, {{:., meta, [fun]}, meta, []})
 
   # Pipe into inspect with label
   defmacro left |> {{:., meta_start, [aliases, :inspect]}, meta_end, args} do
@@ -49,24 +41,14 @@ defmodule Pipette.Macros do
   end
 
   # Default pipe definition
-  defmacro left |> right, do: either(:right, left, right)
+  defmacro left |> right, do: result(:ok, left, right)
 
   # Pipe errors into function defintion
   defmacro left <~ ({:fn, meta, _} = fun), do:
-    either(:left, left, {{:., meta, [fun]}, meta, []})
+    result(:error, left, {{:., meta, [fun]}, meta, []})
 
   # Pipe errors to function
-  defmacro left <~ right, do: either(:left, left, right)
-
-  # Simple lambdas
-  defmacro ({_, meta, _} = left) ~> right do
-    quote do
-      unquote({:fn, meta, [{:->, meta, [
-        [left],
-        right
-      ]}]})
-    end
-  end
+  defmacro left <~ right, do: result(:error, left, right)
 
   defp place_arg([]), do: [@value]
   defp place_arg(args), do: place_arg(args, false) || [@value | args]
@@ -75,9 +57,9 @@ defmodule Pipette.Macros do
   defp place_arg([_() | tail], _), do: [@value | place_arg(tail, true)]
   defp place_arg([head | tail], match), do: (tail = place_arg(tail, match)) && [head | tail]
 
-  defp either(side, left, {call, meta, args}) do
+  defp result(side, left, {call, meta, args}) do
     quote do
-      apply(Either, unquote(side), [
+      apply(Result, unquote(side), [
         unquote(left),
         fn unquote(@value) -> unquote({call, meta, place_arg(args)}) end
       ])
