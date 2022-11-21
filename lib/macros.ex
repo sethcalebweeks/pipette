@@ -10,6 +10,7 @@ defmodule Pex.Macros do
 
   # Pipe into map
   defmacro left |> {:%{}, meta, args} do
+    left = Result.unwrap(:ok, left)
     args = Enum.map(args, fn
       {_(), _()} -> {left, left};
       {_(), value} -> {left, value};
@@ -17,20 +18,20 @@ defmodule Pex.Macros do
       x -> x
     end)
     quote do
-      unquote({:ok, {:%{}, meta, args}})
+      {:ok, unquote({:%{}, meta, args})}
     end
   end
 
   # Pipe into list
-  defmacro left |> [{:|, _, [_(), tail]}], do: {:ok, [left | tail]}
+  defmacro left |> [{:|, _, [_(), tail]}], do: {:ok, [Result.unwrap(:ok, left) | tail]}
   defmacro left |> [{:|, _, [head, _()]}], do:
-    quote([do: {:ok, [unquote(head) | unquote(left)]}])
+    quote([do: {:ok, [unquote(head) | Result.unwrap(:ok, unquote(left))]}])
   defmacro left |> right when is_list(right), do:
-    {:ok, Enum.map(right, fn _() -> left; x -> x end)}
+    {:ok, Enum.map(right, fn _() -> Result.unwrap(:ok, left); x -> x end)}
 
   # Pipe into function defintion
   defmacro left |> ({:fn, meta, _} = fun), do:
-    result(:ok, left, {{:., meta, [fun]}, meta, []})
+    result(:ok, Result.unwrap(:ok, left), {{:., meta, [fun]}, meta, []})
 
   # Pipe into inspect with label
   defmacro left |> {{:., meta_start, [aliases, :inspect]}, meta_end, args} do

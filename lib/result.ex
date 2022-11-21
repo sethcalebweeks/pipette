@@ -10,18 +10,12 @@ defmodule Pex.Result do
   def error({:error, error}, fun), do: result(:error, error, fun)
   def error(value, _fun), do: value
 
-  defp result(side, value, fun) do
-    # Unwrap the value
-    value = case value do
-      {^side, value} -> value
-      value -> value
-    end
+  defp result(tag, value, fun) do
     try do
-      # Rewrap the value
-      case fun.(value) do
+      case fun.(unwrap(tag, value)) do
         {:ok, value} -> {:ok, value}
         {:error, value} -> {:error, value}
-        value -> {side, value}
+        value -> {tag, value}
       end
     rescue
       exception -> {:error, exception}
@@ -29,5 +23,14 @@ defmodule Pex.Result do
       error -> {:error, error}
     end
   end
+
+
+  def unwrap(tag, value) do
+    case value do
+      {^tag, value} -> value
+      value -> value
+    end
+  end
+
 
 end

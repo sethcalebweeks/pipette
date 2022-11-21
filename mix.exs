@@ -28,12 +28,12 @@ defmodule Pex.MixProject do
   end
 
   defp description() do
-    """
+    "
     Overides the default pipe operator with one that has automatic result tuple
     wrapping and unwrapping, piping into maps, lists, and specific parameter
     position, piping into function definition, skipping overerror tuples,
     transforming error tuples, catching thrown values, and rescuing exceptions.
-    """
+    "
   end
 
   defp package() do

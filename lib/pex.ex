@@ -1,7 +1,9 @@
 defmodule Pex do
 
   @moduledoc """
-  This is how to use Pex
+  ## Usage
+
+  Add `use Pex` to the start of the module. This will overide the default pipe operator and intorduce the `<~` operator.
 
   ## Examples
 
