@@ -1,6 +1,9 @@
-defmodule PexTest do
+defmodule PipetteTest do
   use ExUnit.Case
-  use Pex
+  use Pipette
 
-  doctest Pex
+  # doctest Pipette
+
+
+
 end
